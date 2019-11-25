@@ -1,4 +1,6 @@
-install:
+version: 2
+jobs:
+  install:
     docker:
       - image: circleci/node:dubnium
     working_directory: ~/repo
