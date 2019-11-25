@@ -2,7 +2,7 @@ version: 2
     jobs:
         build:
             docker:
-                - image: circleci/dubnium
+                - image: circleci/node:dubnium
             steps:
                 - checkout
                 - run: yarn global add node-gyp && yarn install
