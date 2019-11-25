@@ -43,7 +43,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - dependencies-
       - run: 
-          name: yarn test:e2e
+          command: yarn test:e2e
           environment:
             DATABASE_URL: postgres://psqluer:psqlpassword@localhost:5432/psdb
             JWT_SECRET: "test"
