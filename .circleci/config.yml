@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  install:
     docker:
       - image: circleci/node:dubnium
     steps:
@@ -14,3 +14,9 @@ jobs:
           paths:
             - node_modules
           key: $CACHE_VERSION-dependencies-{{ checksum "package.json" }}
+  lint:
+    steps:
+      - run : yarn lint && yarn format:checkout
+  test:
+    steps:
+      - run : yarn test:ci
