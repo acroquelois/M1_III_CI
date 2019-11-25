@@ -7,8 +7,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - $CACHE_VERSION-dependencies-{{ checksum "package.json" }}
-            - $CACHE_VERSION-dependencies-
+            - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
+            # fallback to using the latest cache if no exact match is found
+            - dependencies-
       - run: yarn global add node-gyp && yarn install
       - save_cache:
           paths:
@@ -19,9 +20,10 @@ jobs:
       - image: circleci/node:dubnium
     steps:
       - restore_cache:
-        keys:
-            - $CACHE_VERSION-dependencies-{{ checksum "package.json" }}
-            - $CACHE_VERSION-dependencies-
+          keys:
+            - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
+            # fallback to using the latest cache if no exact match is found
+            - dependencies-
       - run : yarn lint && yarn format:checkout
   test:
     docker:
@@ -29,8 +31,9 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - $CACHE_VERSION-dependencies-{{ checksum "package.json" }}
-            - $CACHE_VERSION-dependencies-
+            - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
+            # fallback to using the latest cache if no exact match is found
+            - dependencies-
       - run : yarn test:ci
       
 workflows:
