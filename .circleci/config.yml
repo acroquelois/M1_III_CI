@@ -30,9 +30,9 @@ workflows:
   build_lint_test:
     jobs:
       - build
-      - lint
+      - lint:
           requires:
             - build
-      - test
+      - test:
           requires:
             - build
