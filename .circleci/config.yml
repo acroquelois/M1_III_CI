@@ -34,7 +34,7 @@ jobs:
   test_bdd:
     docker:
       - image: circleci/node:dubnium
-      - image: postgres:9.6.5-alphine-ram
+      - image: postgres:9.6.5-alphine
     steps:
       - checkout
       - restore_cache:
