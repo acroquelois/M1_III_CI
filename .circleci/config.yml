@@ -25,7 +25,7 @@ jobs:
             - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
             # fallback to using the latest cache if no exact match is found
             - dependencies-
-      - run : yarn lint && yarn format:checkout
+      - run : yarn lint && yarn format:check
   test:
     docker:
       - image: circleci/node:dubnium
