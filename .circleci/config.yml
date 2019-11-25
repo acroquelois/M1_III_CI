@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build_node:
+  build:
     docker:
       - image: circleci/node:dubnium
       - image: circleci/postgres:9.6.5-alphine-ram
@@ -66,10 +66,13 @@ workflows:
   version: 2
   build_lint_test:
     jobs:
-      - build_node
+      - build
       - lint:
           requires:
-            - build_node
+            - build
+      - test_bdd:
+          requires:
+            - build 
       - test_ci:
           requires:
             - build
