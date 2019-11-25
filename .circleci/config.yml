@@ -18,11 +18,19 @@ jobs:
     docker:
       - image: circleci/node:dubnium
     steps:
+      - restore_cache:
+        keys:
+            - $CACHE_VERSION-dependencies-{{ checksum "package.json" }}
+            - $CACHE_VERSION-dependencies-
       - run : yarn lint && yarn format:checkout
   test:
     docker:
       - image: circleci/node:dubnium
     steps:
+      - restore_cache:
+          keys:
+            - $CACHE_VERSION-dependencies-{{ checksum "package.json" }}
+            - $CACHE_VERSION-dependencies-
       - run : yarn test:ci
       
 workflows:
