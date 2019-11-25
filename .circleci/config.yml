@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:dubnium
-      - image: postgres:9.6.2-alpine
+      - image: postgres:9.6.5-alpine
         environment:
           POSTGRES_USER: psqluser
           POSTGRES_PASSWORD: psqlpassword
