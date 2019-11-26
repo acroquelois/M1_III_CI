@@ -65,6 +65,7 @@ jobs:
             - dependencies-
       - run: yarn test:ci
   docker_build:
+    machine: true
     working_directory: ~repo
     steps:
       - checkout
