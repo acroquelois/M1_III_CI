@@ -72,7 +72,7 @@ jobs:
             - dependencies-
       - run: yarn run doc:build
       - store_artifacts:
-          path: /doc-server
+          path: doc-server/
   docker_build:
     machine: true
     steps:
