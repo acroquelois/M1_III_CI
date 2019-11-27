@@ -60,13 +60,6 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - dependencies-
       - run: yarn test:ci
-  docker_build:
-    machine: true
-    steps:
-      - checkout
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run: docker build -t acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM .
-      - run: docker push acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM
   doc_build:
     docker:
       - image: circleci/node:dubnium
@@ -77,10 +70,17 @@ jobs:
             - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
             # fallback to using the latest cache if no exact match is found
             - dependencies-
-      - run: yarn buld:doc
+      - run: yarn test:ci && yarn build:doc
+  docker_build:
+    machine: true
+    steps:
+      - checkout
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: docker build -t acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM .
+      - run: docker push acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM
 workflows:
   version: 2
-  build_lint_test:
+  build_circleci:
     jobs:
       - build
       - lint:
