@@ -65,8 +65,8 @@ jobs:
     steps:
       - checkout
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run: docker build -t $CIRCLE_BUILD_NUM .
-      - run: docker push acroquelois/my-awesome-ci-expr:latest
+      - run: docker build -t acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM .
+      - run: docker push acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM
 workflows:
   version: 2
   build_lint_test:
