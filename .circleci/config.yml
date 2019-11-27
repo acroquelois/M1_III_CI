@@ -97,3 +97,8 @@ workflows:
             - test_ci
             - lint
             - test_bdd
+      - doc_buils:
+          requires:
+            - test_ci
+            - lint
+            - test_bdd
