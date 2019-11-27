@@ -3,7 +3,6 @@ jobs:
   build:
     docker:
       - image: circleci/node:dubnium
-    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
@@ -19,7 +18,6 @@ jobs:
   lint:
     docker:
       - image: circleci/node:dubnium
-    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
@@ -36,10 +34,8 @@ jobs:
           POSTGRES_USER: psqluser
           POSTGRES_PASSWORD: psqlpassword
           POSTGRES_DB: psdb
-    working_directory: ~/repo
     steps:
-      - checkout:
-          path: ~/repo
+      - checkout
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
@@ -56,10 +52,8 @@ jobs:
   test_ci:
     docker:
       - image: circleci/node:dubnium
-    working_directory: ~/repo
     steps:
-      - checkout:
-          path: ~/repo
+      - checkout
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
@@ -69,7 +63,6 @@ jobs:
   documentation_build:
     docker:
       - image: circleci/node:dubnium
-    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
@@ -79,7 +72,7 @@ jobs:
             - dependencies-
       - run: yarn run doc:build
       - store_artifacts:
-          path: ~/repo/server-doc
+          path: /doc-server
   docker_build:
     machine: true
     steps:
