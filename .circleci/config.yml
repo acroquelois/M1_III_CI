@@ -84,3 +84,5 @@ workflows:
       - docker_build:
           requires:
             - test_ci
+            - lint
+            - test_bdd
