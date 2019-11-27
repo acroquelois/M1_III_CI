@@ -60,7 +60,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - dependencies-
       - run: yarn test:ci
-  doc_build:
+  documentation_build:
     docker:
       - image: circleci/node:dubnium
     steps:
@@ -70,7 +70,10 @@ jobs:
             - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
             # fallback to using the latest cache if no exact match is found
             - dependencies-
-      - run: yarn run doc:build
+      - run: yarn run doc:build > /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
+          destination: artifact-file
   docker_build:
     machine: true
     steps:
@@ -97,7 +100,7 @@ workflows:
             - test_ci
             - lint
             - test_bdd
-      - doc_build:
+      - documentation_build:
           requires:
             - test_ci
             - lint
