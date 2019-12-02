@@ -1,14 +1,14 @@
 version: 2
 jobs:
-  build:
+  install:
     docker:
-      - image: circleci/node:dubnium
+      - image: circleci/node:dubnium-browsers
+    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
-            # fallback to using the latest cache if no exact match is found
             - dependencies-
       - run: yarn global add node-gyp && yarn install
       - save_cache:
@@ -17,90 +17,100 @@ jobs:
           key: dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
   lint:
     docker:
-      - image: circleci/node:dubnium
+      - image: circleci/node:dubnium-browsers
+    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
-          keys:
-            - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
-            # fallback to using the latest cache if no exact match is found
-            - dependencies-
-      - run: yarn lint && yarn format:check
-  test_bdd:
+          key: dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
+      - run: yarn lint
+      - run: yarn format:check
+  back-test-unit:
     docker:
-      - image: circleci/node:dubnium
-      - image: circleci/postgres:9.6.2-alpine
-        environment:
-          POSTGRES_USER: psqluser
-          POSTGRES_PASSWORD: psqlpassword
-          POSTGRES_DB: psdb
+      - image: circleci/node:dubnium-browsers
+    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
-          keys:
-            - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
-            # fallback to using the latest cache if no exact match is found
-            - dependencies-
-      - run:
-          command: yarn test:e2e
-          environment:
-            DATABASE_URL: postgres://psqluser:psqlpassword@localhost:5432/psdb
-            JWT_SECRET: 'test'
-            API_PORT: 3000
-            API_HOST: localhost
-            API_PROTOCOL: http
-  test_ci:
-    docker:
-      - image: circleci/node:dubnium
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
-            # fallback to using the latest cache if no exact match is found
-            - dependencies-
+          key: dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
       - run: yarn test:ci
-  documentation_build:
+  back-test-e2e:
     docker:
-      - image: circleci/node:dubnium
+      - image: circleci/node:dubnium-browsers
+      - image: circleci/postgres:9.6.5
+        environment:
+          POSTGRES_DB: psqluer
+          POSTGRES_USER: psqluer
+          POSTGRES_PASSWORD: psqlpassword
+    working_directory: ~/repo
+    environment:
+      DATABASE_URL: postgres://psqluer:psqlpassword@localhost:5432/psqluer
+      JWT_SECRET: NOT_SECURE_SECRET
+      API_PORT: 3000
+      API_HOST: localhost
+      API_PROTOCOL: http
     steps:
       - checkout
       - restore_cache:
-          keys:
-            - dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
-            # fallback to using the latest cache if no exact match is found
-            - dependencies-
-      - run: yarn run doc:build
-      - store_artifacts:
-          path: doc-server/
-  docker_build:
-    machine: true
+          key: dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
+      - run: yarn test:e2e
+  docker-build-and-push:
+    working_directory: /dockerapp
+    docker:
+      - image: docker:17.05.0-ce-git
     steps:
       - checkout
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: docker build -t acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM .
-      - run: docker push acroquelois/my-awesome-ci-expr:$CIRCLE_BUILD_NUM
+      - setup_remote_docker
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build --cache-from=app -t app .
+      - deploy:
+          name: Publish application to docker hub
+          command: |
+            docker login -e $DOCKER_HUB_EMAIL -u $DOCKER_HUB_USER_ID -p $DOCKER_HUB_PWD
+            docker tag app $DOCKER_HUB_USER_ID/$APP_NAME:$CIRCLE_BUILD_NUM
+            docker tag app $DOCKER_HUB_USER_ID/$APP_NAME:latest
+            docker push $DOCKER_HUB_USER_ID/$APP_NAME:$CIRCLE_BUILD_NUM
+            docker push $DOCKER_HUB_USER_ID/$APP_NAME:latest
+  server-doc-build:
+    docker:
+      - image: circleci/node:dubnium-browsers
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependencies-{{ checksum "package.json" }}-{{ .Environment.CACHE_VERSION }}
+      - run: yarn doc:build
+      - store_artifacts:
+          path: ~/repo/server-doc
+
 workflows:
   version: 2
-  build_circleci:
+  build-test-and-lint:
     jobs:
       - build
+      - back-test-unit:
+          requires:
+            - build
+      - back-test-e2e:
+          requires:
+            - build
       - lint:
           requires:
             - build
-      - test_bdd:
+      - server-doc-build:
           requires:
             - build
-      - test_ci:
+            - lint
+            - back-test-e2e
+            - back-test-unit
+      - docker-build-and-push:
           requires:
             - build
-      - docker_build:
-          requires:
-            - test_ci
             - lint
-            - test_bdd
-      - documentation_build:
-          requires:
-            - test_ci
-            - lint
-            - test_bdd
+            - back-test-e2e
+            - back-test-unit
+          filters:
+            branches:
+              only: master
